@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from chatbot import ask_bot
+from Groundwaterchatbot.chatbot import ask_bot 
 
 st.set_page_config(
     page_title="Groundwater AI Chatbot",
