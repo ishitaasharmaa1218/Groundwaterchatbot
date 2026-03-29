@@ -1,5 +1,6 @@
 streamlit
-langchain
-faiss-cpu
+langchain==0.0.352
 openai
+faiss-cpu
+tiktoken
 python-dotenv
