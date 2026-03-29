@@ -1,43 +1,46 @@
-import faiss
-import numpy as np
-from sentence_transformers import SentenceTransformer
-from transformers import pipeline
+import os
+from langchain.vectorstores import FAISS
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.document_loaders import TextLoader
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.chains import RetrievalQA
+from langchain.llms import OpenAI
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+# Load embeddings
+def get_embeddings():
+    return OpenAIEmbeddings()
 
-index = faiss.read_index("vectorstore/index.faiss")
+# Create or load vectorstore
+def get_vectorstore():
+    embeddings = get_embeddings()
 
-with open("vectorstore/texts.txt", "r", encoding="utf-8") as f:
-    texts = f.readlines()
+    if os.path.exists("vectorstore"):
+        db = FAISS.load_local("vectorstore", embeddings)
+    else:
+        # Load your data
+        loader = TextLoader("data/data.txt")  # make sure this file exists
+        documents = loader.load()
 
-generator = pipeline(
-    "text-generation",
-    model="google/flan-t5-base"
-)
+        # Split text
+        splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+        docs = splitter.split_documents(documents)
 
-def ask_bot(question):
+        # Create vectorstore
+        db = FAISS.from_documents(docs, embeddings)
 
-    query_embedding = model.encode([question])
+        # Save it
+        db.save_local("vectorstore")
 
-    distances, indices = index.search(np.array(query_embedding), k=3)
+    return db
 
-    context = ""
-    for i in indices[0]:
-        context += texts[i]
+# Main chatbot function
+def ask_bot(query):
+    db = get_vectorstore()
 
-    prompt = f"""
-    You are a groundwater analysis assistant.
+    qa = RetrievalQA.from_chain_type(
+        llm=OpenAI(),
+        retriever=db.as_retriever()
+    )
 
-    Context:
-    {context}
-
-    Question: {question}
-
-    Give a clear explanation of the groundwater trend.
-    """
-
-    result = generator(prompt, max_length=200)
-
-    answer = result[0]["generated_text"]
-
-    return answer, context
+    response = qa.run(query)
+    return response
