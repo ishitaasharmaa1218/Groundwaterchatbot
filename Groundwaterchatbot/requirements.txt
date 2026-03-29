@@ -1,6 +1,5 @@
 streamlit
-sentence-transformers
-chromadb
 langchain
-langchain-community
-transformers
+faiss-cpu
+openai
+python-dotenv
