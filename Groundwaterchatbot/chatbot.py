@@ -7,9 +7,8 @@ def ask_bot(query):
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "You are a helpful groundwater expert assistant."},
+            {"role": "system", "content": "You are a groundwater expert assistant."},
             {"role": "user", "content": query}
         ]
     )
-    
     return response.choices[0].message.content
