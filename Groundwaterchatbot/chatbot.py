@@ -1,14 +1,7 @@
-import os
-from openai import OpenAI
+from transformers import pipeline
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+generator = pipeline("text-generation", model="gpt2")
 
 def ask_bot(query):
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are a groundwater expert assistant."},
-            {"role": "user", "content": query}
-        ]
-    )
-    return response.choices[0].message.content
+    response = generator(query, max_length=100, num_return_sequences=1)
+    return response[0]['generated_text'], ""
